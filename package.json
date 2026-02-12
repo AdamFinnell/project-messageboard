@@ -13,6 +13,7 @@
 		"express": "^4.14.0",
 		"helmet": "^3.23.3",
 		"mocha": "^3.2.0",
+		"mongodb": "^7.1.0",
 		"mongoose": "^9.0.2"
 	},
 	"repository": {

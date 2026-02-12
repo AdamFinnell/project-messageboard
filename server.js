@@ -10,7 +10,7 @@ const port = 3000;
 app.use(bodyParser.json()); // Parse JSON bodies
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost/messageboard', {
+mongoose.connect('mongodb+srv://afinnell_db_user:OkOfZyuRp90Qw44E@cluster0.ywpfvgm.mongodb.net/?appName=Cluster0', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
