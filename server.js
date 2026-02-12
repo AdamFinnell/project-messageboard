@@ -1,25 +1,47 @@
+'use strict';
+
 const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser'); // Import body-parser
-const apiRoutes = require('./routes/api.js'); // Adjust path
+require('dotenv').config();
+
+const apiRoutes = require('./routes/api');
 
 const app = express();
-const port = 3000;
 
-// Middleware
-app.use(bodyParser.json()); // Parse JSON bodies
+// Security headers FCC REQUIRES
+app.use(helmet({
+  noSniff: true,
+  xssFilter: true,
+}));
+
+app.use(helmet.dnsPrefetchControl({ allow: false }));
+app.use(helmet.referrerPolicy({ policy: "same-origin" }));
+
+app.use(cors({ origin: '*' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://afinnell_db_user:OkOfZyuRp90Qw44E@cluster0.ywpfvgm.mongodb.net/?appName=Cluster0', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect(process.env.DB, {
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true
+}).then(() => console.log("DB connected"))
+  .catch(err => console.error(err));
 
-// Use the API routes
-app.use('/api', apiRoutes);
+// ROUTES
+apiRoutes(app);
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+// FCC TESTING
+if (process.env.NODE_ENV === 'tests') {
+  console.log('Running in test mode');
+  const runner = require('./test-runner');
+}
+
+// START SERVER
+const listener = app.listen(3000, () => {
+  console.log('Your app is listening on port ' + listener.address().port);
 });
+
+module.exports = app; // For testing
