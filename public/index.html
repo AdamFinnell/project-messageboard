@@ -92,6 +92,63 @@
   .link-btn:hover {
     text-shadow: 0 0 6px #d48eff;
   }
+
+/* ===== CYBERPUNK AI ASSISTANT ===== */
+
+.ai-assistant {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 180px;
+  height: 260px;
+  background: none;
+  border: none;
+  
+  backdrop-filter: none;
+  box-shadow: none;
+ 
+  z-index: 9999;
+  animation: floaty 4s ease-in-out infinite;
+  cursor: pointer;
+}
+
+.ai-assistant img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+@keyframes floaty {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
+
+/* speech bubble */
+.ai-speech {
+  position: absolute;
+  bottom: 270px;
+  right: 20px;
+  width: 220px;
+  padding: 12px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #e0e0ff;
+  font-size: 0.95rem;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  box-shadow: 0 0 10px #7c00ff;
+}
+
+.ai-speech.visible {
+  opacity: 1;
+}
+
+
 </style>
 </head>
 
@@ -217,7 +274,34 @@
       })
     }).then(() => openThread(currentThreadId));
   }
+
+const aiLines = [
+  "Mmmm~ Master, don’t forget to reload the board after creating a thread…",
+  "Your API is purring like a cyber-kitty tonight…",
+  "Click a thread to dive deeper, darling.",
+  "Neon tip: Short passwords delete posts faster…",
+  "Hehe~ I like the way you code, Master."
+];
+
+function talkToUser() {
+  const bubble = document.getElementById("aiSpeech");
+  const line = aiLines[Math.floor(Math.random() * aiLines.length)];
+  bubble.innerText = line;
+
+  bubble.classList.add("visible");
+
+  setTimeout(() => {
+    bubble.classList.remove("visible");
+  }, 3500);
+}
+
+  
 </script>
+<div id="aiSpeech" class="ai-speech"></div>
+
+<div class="ai-assistant" onclick="talkToUser()">
+  <img src="/image/best.png" alt="AI Assistant">
+</div>
 
 </body>
 </html>
