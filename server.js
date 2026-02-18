@@ -10,41 +10,45 @@ const apiRoutes = require('./routes/api');
 
 const app = express();
 
-// Security headers FCC REQUIRES
-app.use(helmet({
-  noSniff: true,
-  xssFilter: true,
-}));
+// === SECURITY HEADERS FCC REQUIRES ===
+// app.use(helmet({ noSniff: true, xssFilter: true }));
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');        // iframe restriction
+  res.setHeader('X-DNS-Prefetch-Control', 'off');        // disable DNS prefetching
+  res.setHeader('Referrer-Policy', 'same-origin');       // only send referrer to own pages
+  res.setHeader('X-Content-Type-Options', 'nosniff');    // no sniff
+  res.setHeader('X-XSS-Protection', '1; mode=block');    // xss filter
+  next();
+});
 
-app.use(helmet.dnsPrefetchControl({ allow: false }));
-app.use(helmet.referrerPolicy({ policy: "same-origin" }));
 
+// CORS
 app.use(cors({ origin: '*' }));
+
+// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files
 app.use(express.static(__dirname + '/public'));
 
-
-// Connect to MongoDB
-mongoose.connect(process.env.DB, {
-  // useNewUrlParser: true,
-  // useUnifiedTopology: true
-}).then(() => console.log("DB connected"))
+// === MONGOOSE / MONGO CONNECTION ===
+mongoose.connect(process.env.DB)
+  .then(() => console.log("DB connected"))
   .catch(err => console.error(err));
 
-// ROUTES
+// === ROUTES ===
 apiRoutes(app);
 
-// FCC TESTING
+// === FCC TEST RUNNER ===
 if (process.env.NODE_ENV === 'tests') {
   console.log('Running in test mode');
   const runner = require('./test-runner');
 }
 
-// START SERVER
+// === START SERVER ===
 const listener = app.listen(3000, () => {
   console.log('Your app is listening on port ' + listener.address().port);
 });
 
-module.exports = app; // For testing
+module.exports = app; 
