@@ -23,6 +23,9 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(express.static(__dirname + '/public'));
+
+
 // Connect to MongoDB
 mongoose.connect(process.env.DB, {
   // useNewUrlParser: true,

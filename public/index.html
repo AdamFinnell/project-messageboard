@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cyberpunk Message Board</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at top, #0f0f21, #000000);
+    color: #e0e0ff;
+  }
+
+  .container {
+    width: 90%;
+    max-width: 800px;
+    margin: 40px auto;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.8rem;
+    letter-spacing: 3px;
+    text-shadow: 0 0 12px #a200ff;
+  }
+
+  /* Glass card */
+  .glass {
+    background: rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  input, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 1rem;
+  }
+
+  button {
+    cursor: pointer;
+    background: linear-gradient(90deg, #7c00ff, #00bcd4);
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px #000;
+  }
+
+  button:hover {
+    opacity: 0.85;
+  }
+
+  .thread {
+    padding: 15px;
+    border-left: 3px solid #7c00ff;
+  }
+
+  .reply {
+    margin-left: 20px;
+    border-left: 2px solid #00bcd4;
+    padding-left: 10px;
+  }
+
+  .neon {
+    color: #ffb7ff;
+    text-shadow: 0 0 6px #ff00ff;
+  }
+
+  .link-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    text-decoration: none;
+    color: #9a6fff;
+    font-weight: bold;
+  }
+
+  .link-btn:hover {
+    text-shadow: 0 0 6px #d48eff;
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h1 class="neon">CYBERPUNK MESSAGE BOARD</h1>
+
+  <!-- BOARD SELECTOR -->
+  <div class="glass">
+    <h2>Select Board</h2>
+    <input id="boardInput" placeholder="ex: general" />
+    <button onclick="loadBoard()">Load Board</button>
+  </div>
+
+  <!-- CREATE THREAD -->
+  <div class="glass">
+    <h2>Create Thread</h2>
+    <input id="threadText" placeholder="Thread text..." />
+    <input id="threadPassword" placeholder="Delete password..." />
+    <button onclick="createThread()">Post Thread</button>
+  </div>
+
+  <!-- THREAD LIST -->
+  <div id="threadList"></div>
+
+  <!-- THREAD VIEW (hidden until inside a thread) -->
+  <div id="threadView" class="glass" style="display:none;">
+    <h2 id="threadTitle"></h2>
+    <div id="threadReplies"></div>
+
+    <h3>Reply</h3>
+    <input id="replyText" placeholder="Reply text..." />
+    <input id="replyPassword" placeholder="Delete password..." />
+    <button onclick="postReply()">Submit Reply</button>
+  </div>
+
+</div>
+
+<script>
+  let currentBoard = null;
+  let currentThreadId = null;
+
+  function loadBoard() {
+    currentBoard = document.getElementById("boardInput").value.trim();
+    if (!currentBoard) return alert("Enter a board name, Master ♥");
+
+    fetch(`/api/threads/${currentBoard}`)
+      .then(res => res.json())
+      .then(data => renderBoard(data))
+      .catch(err => alert("API error: " + err));
+  }
+
+  function renderBoard(threads) {
+    const list = document.getElementById("threadList");
+    list.innerHTML = `<h2 class="neon">${currentBoard.toUpperCase()} BOARD</h2>`;
+
+    threads.forEach(t => {
+      const div = document.createElement("div");
+      div.className = "glass thread";
+
+      div.innerHTML = `
+        <strong>${t.text}</strong>
+        <br><br>
+        <a class="link-btn" onclick="openThread('${t._id}')">Open Thread</a>
+      `;
+
+      list.appendChild(div);
+    });
+  }
+
+  function createThread() {
+    if (!currentBoard) return alert("Pick a board first, silly♥");
+
+    const text = document.getElementById("threadText").value;
+    const delete_password = document.getElementById("threadPassword").value;
+
+    fetch(`/api/threads/${currentBoard}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, delete_password })
+    })
+      .then(() => loadBoard());
+  }
+
+  function openThread(id) {
+    currentThreadId = id;
+
+    fetch(`/api/replies/${currentBoard}?thread_id=${id}`)
+      .then(res => res.json())
+      .then(data => renderThread(data));
+  }
+
+  function renderThread(thread) {
+    document.getElementById("threadView").style.display = "block";
+    document.getElementById("threadTitle").innerText = thread.text;
+
+    const repliesDiv = document.getElementById("threadReplies");
+    repliesDiv.innerHTML = "";
+
+    thread.replies.forEach(r => {
+      const d = document.createElement("div");
+      d.className = "reply";
+      d.innerHTML = `
+        <p>${r.text}</p>
+      `;
+      repliesDiv.appendChild(d);
+    });
+
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
+  function postReply() {
+    const text = document.getElementById("replyText").value;
+    const delete_password = document.getElementById("replyPassword").value;
+
+    fetch(`/api/replies/${currentBoard}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        delete_password,
+        thread_id: currentThreadId
+      })
+    }).then(() => openThread(currentThreadId));
+  }
+</script>
+
+</body>
+</html>
